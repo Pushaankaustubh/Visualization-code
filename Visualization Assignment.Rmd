@@ -1,0 +1,92 @@
+---
+title: "Assignment 4"
+author: "pushaan"
+date: "3/7/2021"
+output: html_document
+---
+
+# Question 1 parallel coordinate plot
+```{r}
+
+ny_accidents <- read.csv("C:/IE6600/ny_accidents.csv")
+
+ny_accidents[ny_accidents==""] <- NA
+ny_accidents<- ny_accidents[!is.na(ny_accidents$BOROUGH),]
+library(hrbrthemes)
+library(GGally)
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+
+data <- ny_accidents
+
+data <- data[,-(1:2),drop=FALSE]
+data <- data[,-(2:10),drop=FALSE]
+data <- data[,-(8:18),drop=FALSE]
+data$num
+data1<-data%>%
+  group_by(BOROUGH)%>%
+  summarise(pedestriansinjured=sum(NUMBER.OF.PEDESTRIANS.INJURED,na.rm = T),
+            pedestrianskilled=sum(NUMBER.OF.PEDESTRIANS.KILLED,na.rm = T),
+            cyclistinjured=sum(NUMBER.OF.CYCLIST.INJURED,na.rm = T),
+            cyclistkilled=sum(NUMBER.OF.CYCLIST.KILLED,na.rm = T),
+            motoristinjured=sum(NUMBER.OF.MOTORIST.INJURED,na.rm = T),
+            motoristkilled=sum(NUMBER.OF.MOTORIST.KILLED,na.rm = T))
+
+ggparcoord(data1, columns = 2:7  , groupColumn =1 ,
+showPoints = TRUE,
+title = "Parallel Coordinate Plot for NY Collisions",
+scale="globalminmax")
+```
+
+#drawback of the parallel coordinate plot is scaling.I have changed the scaling from "globalminmax" to "std".I have also changed the font size since it was difficult to read.
+```{r}
+ggp1<- ggparcoord(data1, columns = 2:7  , groupColumn =1 ,
+showPoints = TRUE,
+title = "Parallel Coordinate Plot for NY Collisions",
+scale="std")
+ggp1 + theme(text = element_text(size = 8))
+
+```
+
+#Question 2 
+```{r}
+library(readxl)
+library(GGally)
+library(tidyr)
+SAT <- read_excel("C:/IE6600/sat_performance (1).xlsx")
+SAT<- na.omit(SAT)
+#paired correlation
+ggpairs(data = SAT, columns = c(4,5,6))
+
+#box plot
+SAT_pivot <- pivot_longer(data = SAT, cols = c(4,5,6), names_to = "topic",values_to = "Averagescore")
+ggplot(SAT_pivot, aes(x=topic,y= Averagescore)) + geom_boxplot()
+
+#density plot
+ggplot(SAT_pivot, aes(x=Averagescore, fill=topic)) + geom_density(alpha=0.5)
+
+```
+
+#Question 3
+```{r}
+library(readxl)
+library(GGally)
+library(tidyr)
+library(ggplot2)
+library(plotly)
+MHI <- read_excel("C:/IE6600/Question 3 dataset.xlsx")
+colnames(MHI) <- c("Median_Income","District Name")
+MHI_SAT<- merge(SAT,MHI, by ="District Name")
+MHI_SAT$Average_score <- round((MHI_SAT$Reading+MHI_SAT$Writing+MHI_SAT$Math)/3)
+
+plot <- ggplot(data = MHI_SAT, aes(x= Average_score,y=Median_Income, color=`District Name`))+geom_point(stat = "identity", show.legend = F)
+ggplotly(plot)
+
+
+```
+
+#Observations on the question number 3
+#1)As the Median_income increases the Average_score also increases
+#2)Weston has the highest Median_income while Lexington has the highest Average_score.
+#3)Springfield and Lawrence both have the lowest Median_income and also the lowest Average_score.
